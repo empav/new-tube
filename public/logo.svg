@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="200" viewBox="0 0 720 200" role="img" aria-labelledby="title desc">
+  <title id="title">Logo NewTube</title>
+  <desc id="desc">Logo con pillola arrotondata e triangolo play a sinistra, wordmark a destra</desc>
+  <style>
+    :root{
+      --brand:#FF3D71; /* colore principale del brand */
+      --dark:#111827;  /* testo */
+      --light:#ffffff; /* icona play */
+    }
+    .pill{ fill:var(--brand); }
+    .play{ fill:var(--light); }
+  </style>
+
+  <!-- Marchio -->
+  <g transform="translate(20,20)">
+    <!-- pillola -->
+    <rect class="pill" x="0" y="0" rx="32" ry="32" width="260" height="160"/>
+    <!-- triangolo play centrato -->
+    <path class="play" d="M110 56 L110 104 L156 80 Z"/>
+  </g>
+</svg>
