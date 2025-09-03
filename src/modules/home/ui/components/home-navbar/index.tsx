@@ -9,7 +9,7 @@ export const HomeNavbar = () => {
     <nav className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center bg-white px-2 pr-5">
       <div className="flex w-full items-center gap-4">
         <div className="flex flex-shrink-0 items-center">
-          <SidebarTrigger />
+          <SidebarTrigger className="m-1 [&_svg]:size-6" />
           <Link href={"/"}>
             <div className="pl-4">
               <Image src={"/logo.svg"} alt="Logo" width={150} height={150} />
