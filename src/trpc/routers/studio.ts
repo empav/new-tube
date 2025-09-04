@@ -1,0 +1,59 @@
+import z from "zod";
+import db from "@/db";
+import { videos } from "@/db/schema";
+import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
+import { and, desc, eq, lt, or } from "drizzle-orm";
+
+export const studioRouter = createTRPCRouter({
+  getAll: protectedProcedure
+    .input(
+      z.object({
+        cursor: z
+          .object({
+            id: z.string().uuid(),
+            updatedAt: z.date(),
+          })
+          .nullish(),
+        limit: z.number().min(1).max(100),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const data = await db
+        .select()
+        .from(videos)
+        .where(
+          and(
+            eq(videos.userId, ctx.user.id),
+            input.cursor
+              ? or(
+                  lt(videos.updatedAt, input.cursor.updatedAt),
+                  and(
+                    eq(videos.updatedAt, input.cursor.updatedAt),
+                    lt(videos.id, input.cursor.id),
+                  ),
+                )
+              : undefined,
+          ),
+        )
+        .orderBy(desc(videos.updatedAt), desc(videos.id))
+        // We fetch one more item than the limit to determine if there's a next page
+        .limit(input.limit + 1);
+
+      const hasMore = data.length > input.limit;
+      const items = hasMore ? data.slice(0, -1) : data;
+      const lastItem = items[items.length - 1];
+      const nextCursor = hasMore
+        ? {
+            id: lastItem.id,
+            updatedAt: lastItem.updatedAt,
+          }
+        : undefined;
+
+      return {
+        items,
+        nextCursor,
+      };
+    }),
+});
+
+export type StudioRouter = typeof studioRouter;

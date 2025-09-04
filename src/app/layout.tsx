@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Inter } from "next/font/google";
 import { TRPCProvider } from "@/trpc/client";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 const interFont = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -20,7 +21,10 @@ export default function RootLayout({
     <ClerkProvider afterSignOutUrl="/">
       <html lang="en">
         <body className={interFont.className}>
-          <TRPCProvider>{children}</TRPCProvider>
+          <TRPCProvider>
+            <Toaster position="top-right" />
+            {children}
+          </TRPCProvider>
         </body>
       </html>
     </ClerkProvider>
