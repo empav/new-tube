@@ -7,29 +7,35 @@ import { createTRPCReact } from "@trpc/react-query";
 import { useState } from "react";
 import { makeQueryClient } from "./query-client";
 import type { AppRouter } from "./routers/_app";
+import superjson from "superjson";
+
 export const trpc = createTRPCReact<AppRouter>();
+
 let clientQueryClientSingleton: QueryClient;
-function getQueryClient() {
+
+const getQueryClient = () => {
   if (typeof window === "undefined") {
     // Server: always make a new query client
     return makeQueryClient();
   }
   // Browser: use singleton pattern to keep the same query client
   return (clientQueryClientSingleton ??= makeQueryClient());
-}
-function getUrl() {
+};
+
+const getUrl = () => {
   const base = (() => {
     if (typeof window !== "undefined") return "";
     if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
     return "http://localhost:3000";
   })();
   return `${base}/api/trpc`;
-}
-export function TRPCProvider(
+};
+
+export const TRPCProvider = (
   props: Readonly<{
     children: React.ReactNode;
   }>,
-) {
+) => {
   // NOTE: Avoid useState when initializing the query client if you don't
   //       have a suspense boundary between this and the code that may
   //       suspend because React will throw away the client on the initial
@@ -39,8 +45,13 @@ export function TRPCProvider(
     trpc.createClient({
       links: [
         httpBatchLink({
-          // transformer: superjson, <-- if you use a data transformer
+          transformer: superjson, // <-- if you use a data transformer
           url: getUrl(),
+          async headers() {
+            const headers = new Headers();
+            headers.set("x-trpc-source", "nextjs-react");
+            return headers;
+          },
         }),
       ],
     }),
@@ -52,4 +63,4 @@ export function TRPCProvider(
       </QueryClientProvider>
     </trpc.Provider>
   );
-}
+};

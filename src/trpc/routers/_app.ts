@@ -1,18 +1,17 @@
 import { z } from "zod";
-import { baseProcedure, createTRPCRouter } from "../init";
-import { TRPCError } from "@trpc/server";
+import { createTRPCRouter, protectedProcedure } from "../init";
+
 export const appRouter = createTRPCRouter({
-  hello: baseProcedure
+  hello: protectedProcedure
     .input(
       z.object({
         text: z.string(),
       }),
     )
-    .query(() => {
-      // return {
-      //   greeting: `hello ${opts.input.text}`,
-      // };
-      throw new TRPCError({ code: "BAD_REQUEST" });
+    .query(({ input }) => {
+      return {
+        greeting: `hello ${input.text}`,
+      };
     }),
 });
 // export type definition of API
