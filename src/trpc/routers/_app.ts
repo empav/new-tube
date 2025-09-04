@@ -1,5 +1,5 @@
 import { createTRPCRouter } from "../init";
-import { categoriesRouter } from "@/modules/categories/server/procedures";
+import { categoriesRouter } from "./categories";
 
 export const appRouter = createTRPCRouter({
   categories: categoriesRouter,
