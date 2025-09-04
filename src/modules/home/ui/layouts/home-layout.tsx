@@ -12,7 +12,6 @@ const HomeLayout = ({ children }: { children: React.ReactNode }) => {
           <main className="flex-1 overflow-y-auto">{children}</main>
         </div>
       </div>
-      {children}
     </SidebarProvider>
   );
 };
