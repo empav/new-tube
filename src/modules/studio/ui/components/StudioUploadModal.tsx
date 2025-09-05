@@ -13,9 +13,6 @@ const StudioUploadModal = () => {
   const router = useRouter();
 
   const createVideo = trpc.videos.create.useMutation({
-    onSuccess: () => {
-      utils.studio.getAll.invalidate();
-    },
     onError: (error) => {
       toast.error(error.message);
     },
@@ -33,6 +30,8 @@ const StudioUploadModal = () => {
 
   const onSuccess = () => {
     toast.success("Video uploaded successfully");
+    utils.studio.getAll.invalidate();
+
     createVideo.reset();
 
     if (createdVideoId) {
