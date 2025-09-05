@@ -4,13 +4,29 @@ import { videos } from "@/db/schema";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { mux } from "@/utils/mux";
 import { eq } from "drizzle-orm";
+import { AssetOptions } from "@mux/mux-node/resources/video/assets.mjs";
+
+const CREATE_UPLOAD_CONFIG: AssetOptions = {
+  passthrough: "userId",
+  playback_policies: ["public"],
+  input: [
+    {
+      generated_subtitles: [
+        {
+          language_code: "en",
+          name: "English",
+        },
+      ],
+    },
+  ],
+};
 
 export const videosRouter = createTRPCRouter({
   create: protectedProcedure.mutation(async ({ ctx }) => {
     const upload = await mux.video.uploads.create({
       new_asset_settings: {
+        ...CREATE_UPLOAD_CONFIG,
         passthrough: ctx.user.id,
-        playback_policies: ["public"],
       },
       cors_origin: process.env.MUX_CORS_ORIGIN!,
     });

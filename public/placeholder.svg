@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" viewBox="0 0 64 48" role="img" aria-label="Video non disponibile">
+  <!-- schermo nero -->
+  <rect x="2" y="4" width="60" height="40" rx="4" fill="#000"/>
+
+  <!-- rettangolo rosso centrale -->
+  <rect x="18" y="16" width="28" height="16" rx="3" fill="#ef4444"/>
+
+  <!-- faccina bianca dentro al rettangolo -->
+  <g transform="translate(32,24)">
+    <!-- occhi -->
+    <circle cx="-6" cy="-3" r="1.5" fill="#fff"/>
+    <circle cx="6" cy="-3" r="1.5" fill="#fff"/>
+    <!-- bocca triste -->
+    <path d="M-7,5 Q0,-1 7,5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+</svg>
