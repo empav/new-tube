@@ -1,10 +1,11 @@
 import z from "zod";
 import db from "@/db";
-import { videos } from "@/db/schema";
+import { videos, videoUpdateSchema } from "@/db/schema";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { mux } from "@/utils/mux";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { AssetOptions } from "@mux/mux-node/resources/video/assets.mjs";
+import { TRPCError } from "@trpc/server";
 
 const CREATE_UPLOAD_CONFIG: AssetOptions = {
   passthrough: "userId",
@@ -22,6 +23,29 @@ const CREATE_UPLOAD_CONFIG: AssetOptions = {
 };
 
 export const videosRouter = createTRPCRouter({
+  update: protectedProcedure
+    // Enforce that id is required by extending the schema
+    .input(videoUpdateSchema.extend({ id: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const [video] = await db
+        .update(videos)
+        .set({
+          title: input.title,
+          description: input.description,
+          categoryId: input.categoryId,
+          visibility: input.visibility,
+        })
+        .where(and(eq(videos.id, input.id), eq(videos.userId, ctx.user.id)))
+        .returning();
+
+      if (!video) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Video not found or you do not have permission to update it",
+        });
+      }
+      return video;
+    }),
   create: protectedProcedure.mutation(async ({ ctx }) => {
     const upload = await mux.video.uploads.create({
       new_asset_settings: {
@@ -31,7 +55,7 @@ export const videosRouter = createTRPCRouter({
       cors_origin: process.env.MUX_CORS_ORIGIN!,
     });
 
-    const video = await db
+    const [video] = await db
       .insert(videos)
       .values({
         userId: ctx.user.id,
@@ -48,10 +72,10 @@ export const videosRouter = createTRPCRouter({
         id: z.uuid(),
       }),
     )
-    .mutation(async ({ input }) => {
-      const video = await db
+    .mutation(async ({ ctx, input }) => {
+      const [video] = await db
         .delete(videos)
-        .where(eq(videos.id, input.id))
+        .where(and(eq(videos.id, input.id), eq(videos.userId, ctx.user.id)))
         .returning();
       return video;
     }),

@@ -22,3 +22,16 @@ export const snakeCaseToTitle = (input: string) => {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 };
+
+export const sleep = (ms: number) =>
+  new Promise<void>((resolve) => {
+    const start = performance.now();
+    const check = () => {
+      if (performance.now() - start >= ms) {
+        resolve();
+      } else {
+        requestAnimationFrame(check);
+      }
+    };
+    requestAnimationFrame(check);
+  });

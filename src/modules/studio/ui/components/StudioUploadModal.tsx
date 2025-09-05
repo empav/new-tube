@@ -6,9 +6,11 @@ import { trpc } from "@/trpc/client";
 import { Loader2Icon, PlusIcon } from "lucide-react";
 import { toast } from "sonner";
 import { StudioUploader } from "./StudioUploader";
+import { useRouter } from "next/navigation";
 
 const StudioUploadModal = () => {
   const utils = trpc.useUtils();
+  const router = useRouter();
 
   const createVideo = trpc.videos.create.useMutation({
     onSuccess: () => {
@@ -27,16 +29,23 @@ const StudioUploadModal = () => {
     },
   });
 
+  const createdVideoId = createVideo.data?.video.id;
+
   const onSuccess = () => {
     toast.success("Video uploaded successfully");
+    createVideo.reset();
+
+    if (createdVideoId) {
+      router.push(`/studio/videos/${createdVideoId}`);
+    }
   };
 
   const onError = (event: CustomEvent<unknown>) => {
     toast.error("Video upload failed");
     console.error(event);
 
-    if (createVideo.data?.video[0].id) {
-      deleteVideo.mutate({ id: createVideo.data?.video[0].id });
+    if (createdVideoId) {
+      deleteVideo.mutate({ id: createdVideoId });
     }
   };
 
