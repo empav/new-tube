@@ -133,7 +133,12 @@ const FormSectionSuspense = ({ videoId }: { videoId: string }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={() => deleteVideo.mutate({ id: videoId })}
+                  onClick={() =>
+                    deleteVideo.mutate({
+                      id: videoId,
+                      assetId: video.muxAssetId,
+                    })
+                  }
                 >
                   <TrashIcon className="mr-2 size-4" />
                   Delete

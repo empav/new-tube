@@ -70,14 +70,33 @@ export const videosRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.uuid(),
+        assetId: z.string().optional().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [video] = await db
-        .delete(videos)
-        .where(and(eq(videos.id, input.id), eq(videos.userId, ctx.user.id)))
-        .returning();
-      return video;
+      const promises = [];
+
+      promises.push(
+        db
+          .delete(videos)
+          .where(and(eq(videos.id, input.id), eq(videos.userId, ctx.user.id)))
+          .returning(),
+      );
+
+      if (input.assetId) promises.push(mux.video.assets.delete(input.assetId));
+
+      try {
+        const [video] = await Promise.all(promises);
+        if (Array.isArray(video) && video.length) {
+          return video[0];
+        }
+      } catch {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "Something went wrong with deleting either the video or the mux asset",
+        });
+      }
     }),
 });
 
