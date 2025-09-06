@@ -1,3 +1,4 @@
+import { THUMBNAIL_FALLBACK } from "@/constants";
 import { formatDuration } from "@/lib/utils";
 import Image from "next/image";
 
@@ -18,14 +19,14 @@ const VideoThumbnail = ({
     <div className="group relative">
       <div className="relative aspect-video w-full overflow-hidden rounded-xl">
         <Image
-          src={thumbnailUrl ?? "/placeholder.svg"}
+          src={thumbnailUrl ?? THUMBNAIL_FALLBACK}
           alt={title}
           fill
           className="h-full w-full object-cover group-hover:opacity-0"
         />
         <Image
           unoptimized={!!previewUrl}
-          src={previewUrl ?? "/placeholder.svg"}
+          src={previewUrl ?? THUMBNAIL_FALLBACK}
           alt={title}
           fill
           className="h-full w-full object-cover opacity-0 group-hover:opacity-100"

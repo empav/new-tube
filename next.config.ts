@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "image.mux.com",
       },
+      {
+        protocol: "https",
+        hostname: "b3esub9h5p.ufs.sh",
+      },
     ],
   },
 };
