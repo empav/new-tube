@@ -6,6 +6,7 @@ import { mux } from "@/utils/mux";
 import { and, eq } from "drizzle-orm";
 import { AssetOptions } from "@mux/mux-node/resources/video/assets.mjs";
 import { TRPCError } from "@trpc/server";
+import { UploadThingApi } from "@/app/api/uploadthing/core";
 
 const CREATE_UPLOAD_CONFIG: AssetOptions = {
   passthrough: "userId",
@@ -23,6 +24,70 @@ const CREATE_UPLOAD_CONFIG: AssetOptions = {
 };
 
 export const videosRouter = createTRPCRouter({
+  restoreThumbnail: protectedProcedure
+    .input(
+      z.object({
+        id: z.uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [existingVideo] = await db
+        .select()
+        .from(videos)
+        .where(and(eq(videos.id, input.id), eq(videos.userId, ctx.user.id)));
+
+      if (!existingVideo) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Video not found or you do not have permission to update it",
+        });
+      }
+
+      if (existingVideo.thumbnailKey) {
+        await UploadThingApi.deleteFiles([existingVideo.thumbnailKey]);
+        await db
+          .update(videos)
+          .set({ thumbnailKey: null })
+          .where(and(eq(videos.id, input.id), eq(videos.userId, ctx.user.id)));
+      }
+
+      if (!existingVideo.muxPlaybackId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Video does not have a playback ID",
+        });
+      }
+
+      const tempThumbnailUrl = `https://image.mux.com/${existingVideo.muxPlaybackId}/thumbnail.jpg`;
+
+      const uploadedThumbnail =
+        await UploadThingApi.uploadFilesFromUrl(tempThumbnailUrl);
+
+      if (!uploadedThumbnail.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to upload thumbnail",
+        });
+      }
+
+      const { key: thumbnailKey, ufsUrl: thumbnailUrl } =
+        uploadedThumbnail.data;
+
+      const [updatedVideo] = await db
+        .update(videos)
+        .set({ thumbnailUrl, thumbnailKey })
+        .where(and(eq(videos.id, input.id), eq(videos.userId, ctx.user.id)))
+        .returning();
+
+      if (!updatedVideo) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Video not found or you do not have permission to update it",
+        });
+      }
+
+      return updatedVideo;
+    }),
   update: protectedProcedure
     // Enforce that id is required by extending the schema
     .input(videoUpdateSchema.extend({ id: z.uuid() }))

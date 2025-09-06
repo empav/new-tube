@@ -77,6 +77,17 @@ const FormSectionSuspense = ({ videoId }: { videoId: string }) => {
   const [thumbnailModalOpen, setThumbnailModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
+  const restoreThumbnail = trpc.videos.restoreThumbnail.useMutation({
+    onSuccess: () => {
+      trpcUtils.studio.getById.invalidate({ id: videoId });
+      trpcUtils.studio.getAll.invalidate();
+      toast.success("Thumbnail restored successfully");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const deleteVideo = trpc.videos.delete.useMutation({
     onSuccess: () => {
       trpcUtils.studio.getAll.invalidate();
@@ -232,7 +243,11 @@ const FormSectionSuspense = ({ videoId }: { videoId: string }) => {
                               <SparklesIcon className="mr-1 size-4" />
                               AI Generated
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                restoreThumbnail.mutate({ id: videoId })
+                              }
+                            >
                               <RotateCcwIcon className="mr-1 size-4" />
                               Restore
                             </DropdownMenuItem>
