@@ -13,6 +13,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.31.8",
     "@hookform/resolvers": "^5.2.1",
+    "@huggingface/inference": "^4.7.1",
     "@mux/mux-node": "^12.7.0",
     "@mux/mux-player-react": "^3.5.3",
     "@mux/mux-uploader-react": "^1.2.0",
@@ -51,6 +52,7 @@
     "@uploadthing/react": "^7.3.3",
     "@upstash/ratelimit": "^2.0.6",
     "@upstash/redis": "^1.35.3",
+    "@upstash/workflow": "^0.2.18",
     "class-variance-authority": "^0.7.1",
     "client-only": "^0.0.1",
     "clsx": "^2.1.1",

@@ -13,6 +13,7 @@ import {
   CopyIcon,
   Globe2Icon,
   ImagePlusIcon,
+  Loader2Icon,
   LockIcon,
   MoreVerticalIcon,
   RotateCcwIcon,
@@ -50,6 +51,11 @@ import { sleep, snakeCaseToTitle } from "@/lib/utils";
 import Image from "next/image";
 import { THUMBNAIL_FALLBACK } from "@/constants";
 import { ThumbnailUploadModal } from "../components/ThumbnailUploadModal";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type FormProps = z.infer<typeof videoUpdateSchema>;
 
@@ -77,6 +83,16 @@ const FormSectionSuspense = ({ videoId }: { videoId: string }) => {
   const [thumbnailModalOpen, setThumbnailModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
+  const generateDescription = trpc.videos.generateDescription.useMutation({
+    onSuccess: () => {
+      toast.success("Background job successfully started");
+    },
+  });
+  const generateTitle = trpc.videos.generateTitle.useMutation({
+    onSuccess: () => {
+      toast.success("Background job successfully started");
+    },
+  });
   const restoreThumbnail = trpc.videos.restoreThumbnail.useMutation({
     onSuccess: () => {
       trpcUtils.studio.getById.invalidate({ id: videoId });
@@ -178,7 +194,24 @@ const FormSectionSuspense = ({ videoId }: { videoId: string }) => {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel className="flex items-center gap-x-2">
+                      Title
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          {generateTitle.isPending ? (
+                            <Loader2Icon className="animate-spin" />
+                          ) : (
+                            <SparklesIcon
+                              className="size-4 cursor-pointer"
+                              onClick={() => generateTitle.mutate({ videoId })}
+                            />
+                          )}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Generate a title using AI
+                        </TooltipContent>
+                      </Tooltip>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -194,7 +227,26 @@ const FormSectionSuspense = ({ videoId }: { videoId: string }) => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel className="flex items-center gap-x-2">
+                      Description
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          {generateDescription.isPending ? (
+                            <Loader2Icon className="animate-spin" />
+                          ) : (
+                            <SparklesIcon
+                              className="size-4 cursor-pointer"
+                              onClick={() =>
+                                generateDescription.mutate({ videoId })
+                              }
+                            />
+                          )}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Generate a description using AI
+                        </TooltipContent>
+                      </Tooltip>
+                    </FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
@@ -238,10 +290,6 @@ const FormSectionSuspense = ({ videoId }: { videoId: string }) => {
                             >
                               <ImagePlusIcon className="mr-1 size-4" />
                               Change
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <SparklesIcon className="mr-1 size-4" />
-                              AI Generated
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() =>

@@ -7,6 +7,7 @@ import { and, eq } from "drizzle-orm";
 import { AssetOptions } from "@mux/mux-node/resources/video/assets.mjs";
 import { TRPCError } from "@trpc/server";
 import { UploadThingApi } from "@/app/api/uploadthing/core";
+import { upstashWorkflowClient } from "@/utils/upstash";
 
 const CREATE_UPLOAD_CONFIG: AssetOptions = {
   passthrough: "userId",
@@ -24,6 +25,38 @@ const CREATE_UPLOAD_CONFIG: AssetOptions = {
 };
 
 export const videosRouter = createTRPCRouter({
+  generateTitle: protectedProcedure
+    .input(
+      z.object({
+        videoId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { workflowRunId } = await upstashWorkflowClient.trigger({
+        url: `${process.env.UPSTASH_WORKFLOW_URL}/api/videos/workflows/title`,
+        body: {
+          userId: ctx.user.id,
+          videoId: input.videoId,
+        },
+      });
+      return { workflowRunId };
+    }),
+  generateDescription: protectedProcedure
+    .input(
+      z.object({
+        videoId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { workflowRunId } = await upstashWorkflowClient.trigger({
+        url: `${process.env.UPSTASH_WORKFLOW_URL}/api/videos/workflows/description`,
+        body: {
+          userId: ctx.user.id,
+          videoId: input.videoId,
+        },
+      });
+      return { workflowRunId };
+    }),
   restoreThumbnail: protectedProcedure
     .input(
       z.object({
