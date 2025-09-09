@@ -33,6 +33,7 @@ export const users = pgTable(
 export const userRelations = relations(users, ({ many }) => ({
   videos: many(videos),
   videoViews: many(videoViews),
+  videoReactions: many(videoReactions),
 }));
 
 export const categories = pgTable(
@@ -86,7 +87,7 @@ export const videoUpdateSchema = createUpdateSchema(videos);
 export const videoSelectSchema = createSelectSchema(videos);
 export const videoCreateSchema = createInsertSchema(videos);
 
-export const videoRelations = relations(videos, ({ one }) => ({
+export const videoRelations = relations(videos, ({ one, many }) => ({
   user: one(users, {
     fields: [videos.userId],
     references: [users.id],
@@ -95,6 +96,8 @@ export const videoRelations = relations(videos, ({ one }) => ({
     fields: [videos.categoryId],
     references: [categories.id],
   }),
+  views: many(videoViews),
+  reactions: many(videoReactions),
 }));
 
 export const videoViews = pgTable(
@@ -117,7 +120,7 @@ export const videoViews = pgTable(
   ],
 );
 
-export const videoViewRelations = relations(videoViews, ({ one, many }) => ({
+export const videoViewRelations = relations(videoViews, ({ one }) => ({
   users: one(users, {
     fields: [videoViews.userId],
     references: [users.id],
@@ -126,9 +129,50 @@ export const videoViewRelations = relations(videoViews, ({ one, many }) => ({
     fields: [videoViews.videoId],
     references: [videos.id],
   }),
-  views: many(videoViews),
 }));
 
 export const videoViewSelectSchema = createSelectSchema(videoViews);
 export const videoViewInsertSchema = createInsertSchema(videoViews);
 export const videoViewUpdateSchema = createUpdateSchema(videoViews);
+
+export const reactionType = pgEnum("reaction_type", ["like", "dislike"]);
+
+export const videoReactions = pgTable(
+  "video_reactions",
+  {
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    videoId: uuid("video_id")
+      .references(() => videos.id, { onDelete: "cascade" })
+      .notNull(),
+    type: reactionType("type").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({
+      name: "video_reactions_pkey",
+      columns: [table.userId, table.videoId],
+    }),
+  ],
+);
+
+export const videoReactionRelations = relations(
+  videoReactions,
+  ({ one, many }) => ({
+    users: one(users, {
+      fields: [videoReactions.userId],
+      references: [users.id],
+    }),
+    videos: one(videos, {
+      fields: [videoReactions.videoId],
+      references: [videos.id],
+    }),
+    reactions: many(videoReactions),
+  }),
+);
+
+export const videoReactionSelectSchema = createSelectSchema(videoReactions);
+export const videoReactionInsertSchema = createInsertSchema(videoReactions);
+export const videoReactionUpdateSchema = createUpdateSchema(videoReactions);

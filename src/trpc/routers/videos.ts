@@ -1,13 +1,19 @@
 import z from "zod";
 import db from "@/db";
-import { users, videos, videoUpdateSchema, videoViews } from "@/db/schema";
+import {
+  users,
+  videoReactions,
+  videos,
+  videoUpdateSchema,
+  videoViews,
+} from "@/db/schema";
 import {
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
 } from "@/trpc/init";
 import { mux } from "@/utils/mux";
-import { and, eq, getTableColumns } from "drizzle-orm";
+import { and, eq, getTableColumns, inArray } from "drizzle-orm";
 import { AssetOptions } from "@mux/mux-node/resources/video/assets.mjs";
 import { TRPCError } from "@trpc/server";
 import { UploadThingApi } from "@/app/api/uploadthing/core";
@@ -31,17 +37,57 @@ const CREATE_UPLOAD_CONFIG: AssetOptions = {
 export const videosRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ id: z.uuid() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      let userId;
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(
+          inArray(users.clerkId, ctx.clerkUserId ? [ctx.clerkUserId] : []),
+        );
+
+      if (user) {
+        userId = user.id;
+      }
+
+      const reactions = db.$with("reactions").as(
+        db
+          .select({
+            videoId: videoReactions.videoId,
+            type: videoReactions.type,
+          })
+          .from(videoReactions)
+          .where(inArray(videoReactions.userId, userId ? [userId] : [])),
+      );
+
       const [video] = await db
+        .with(reactions)
         .select({
           ...getTableColumns(videos),
           user: {
             ...getTableColumns(users),
           },
           views: db.$count(videoViews, eq(videoViews.videoId, videos.id)),
+          likes: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "like"),
+            ),
+          ),
+          dislikes: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "dislike"),
+            ),
+          ),
+          reactions: reactions.type,
         })
         .from(videos)
         .innerJoin(users, eq(videos.userId, users.id))
+        .leftJoin(reactions, eq(reactions.videoId, videos.id))
         .where(eq(videos.id, input.id));
 
       if (!video) {
