@@ -1,6 +1,6 @@
 import z from "zod";
 import db from "@/db";
-import { users, videos, videoUpdateSchema } from "@/db/schema";
+import { users, videos, videoUpdateSchema, videoViews } from "@/db/schema";
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -38,6 +38,7 @@ export const videosRouter = createTRPCRouter({
           user: {
             ...getTableColumns(users),
           },
+          views: db.$count(videoViews, eq(videoViews.videoId, videos.id)),
         })
         .from(videos)
         .innerJoin(users, eq(videos.userId, users.id))

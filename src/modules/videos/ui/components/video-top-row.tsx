@@ -8,11 +8,13 @@ import { format, formatDistanceToNow } from "date-fns";
 
 const VideoTopRow = ({ video }: { video: VideoGetByIdOutput }) => {
   const compactViews = useMemo(() => {
-    return Intl.NumberFormat("en", { notation: "compact" }).format(123345);
-  }, []);
+    return Intl.NumberFormat("en", { notation: "compact" }).format(video.views);
+  }, [video.views]);
   const expandedViews = useMemo(() => {
-    return Intl.NumberFormat("en", { notation: "standard" }).format(123345);
-  }, []);
+    return Intl.NumberFormat("en", { notation: "standard" }).format(
+      video.views,
+    );
+  }, [video.views]);
   const compactDate = useMemo(() => {
     return formatDistanceToNow(video.createdAt, { addSuffix: true });
   }, [video.createdAt]);
