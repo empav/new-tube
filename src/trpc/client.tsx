@@ -8,6 +8,7 @@ import { useState } from "react";
 import { makeQueryClient } from "./query-client";
 import type { AppRouter } from "./routers/_app";
 import superjson from "superjson";
+import { TRPC_URL } from "@/utils/trpc";
 
 export const trpc = createTRPCReact<AppRouter>();
 
@@ -20,15 +21,6 @@ const getQueryClient = () => {
   }
   // Browser: use singleton pattern to keep the same query client
   return (clientQueryClientSingleton ??= makeQueryClient());
-};
-
-const getUrl = () => {
-  const base = (() => {
-    if (typeof window !== "undefined") return "";
-    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-    return "http://localhost:3000";
-  })();
-  return `${base}/api/trpc`;
 };
 
 export const TRPCProvider = (
@@ -46,7 +38,7 @@ export const TRPCProvider = (
       links: [
         httpBatchLink({
           transformer: superjson, // <-- if you use a data transformer
-          url: getUrl(),
+          url: TRPC_URL,
           async headers() {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-react");
