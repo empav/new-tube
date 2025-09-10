@@ -164,7 +164,7 @@ const FormSectionSuspense = ({ videoId }: { videoId: string }) => {
             <div className="flex items-center gap-x-2">
               <Button
                 type="submit"
-                disabled={updateVideo.isPending || form.formState.isDirty}
+                disabled={updateVideo.isPending || !form.formState.isDirty}
               >
                 Save
               </Button>
