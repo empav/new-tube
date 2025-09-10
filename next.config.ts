@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  experimental: {
+    serverSourceMaps: false,
+    turbopackMemoryLimit: 3000, // 2 GB
+  },
   images: {
     remotePatterns: [
       {
