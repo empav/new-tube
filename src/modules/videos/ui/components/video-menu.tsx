@@ -16,7 +16,7 @@ type Props = {
 
 const VideoMenu = ({ videoId, variant, onRemove }: Props) => {
   const onShare = () => {
-    const fullURL = `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"}/videos/${videoId}`;
+    const fullURL = `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}/videos/${videoId}` : "http://localhost:3000"}/videos/${videoId}`;
     navigator.clipboard.writeText(fullURL);
     toast.success("Link copied to clipboard");
   };

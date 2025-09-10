@@ -136,7 +136,7 @@ const FormSectionSuspense = ({ videoId }: { videoId: string }) => {
     router.push("/studio");
   };
 
-  const fullURL = `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"}/videos/${videoId}`;
+  const fullURL = `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}/videos/${videoId}` : "http://localhost:3000"}/videos/${videoId}`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(fullURL);
@@ -351,7 +351,7 @@ const FormSectionSuspense = ({ videoId }: { videoId: string }) => {
                     <p className="text-xs text-muted-foreground">Video Link</p>
                     <div className="flex items-center gap-x-2">
                       <Link
-                        href={`/videos/${video.id}`}
+                        href={fullURL}
                         className="text-sm font-medium text-blue-600 hover:underline"
                       >
                         <p className="line-clamp-1 text-sm text-blue-500">
