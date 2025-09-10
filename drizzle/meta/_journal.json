@@ -71,6 +71,13 @@
       "when": 1757427868275,
       "tag": "0009_spotty_puppet_master",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1757494313267,
+      "tag": "0010_clean_warbound",
+      "breakpoints": true
     }
   ]
 }
