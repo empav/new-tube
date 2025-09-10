@@ -1,42 +1,52 @@
-import { httpBatchLink } from "@trpc/client";
+import { httpBatchLink, httpSubscriptionLink, splitLink } from "@trpc/client";
 import { createTRPCNext } from "@trpc/next";
-import type { AppRouter } from "../trpc/routers/_app";
+import { ssrPrepass } from "@trpc/next/ssrPrepass";
+import type { AppRouter } from "@/trpc/routers/_app";
+/**
+ * If you need to add transformers for special data types like `Temporal.Instant` or `Temporal.Date`, `Decimal.js`, etc you can do so here.
+ * Make sure to import this file rather than `superjson` directly.
+ * @see https://github.com/blitz-js/superjson#recipes
+ */
+import superjson from "superjson";
+
+export const transformer = superjson;
 
 function getBaseUrl() {
-  if (typeof window !== "undefined")
-    // browser should use relative path
+  if (typeof window !== "undefined") {
+    // In the browser, we return a relative URL
     return "";
-  if (process.env.VERCEL_URL)
-    // reference for vercel.com
+  }
+  // When rendering on the server, we return an absolute URL
+
+  // reference for vercel.com
+  if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
-  if (process.env.RENDER_INTERNAL_HOSTNAME)
-    // reference for render.com
-    return `http://${process.env.RENDER_INTERNAL_HOSTNAME}:${process.env.PORT}`;
+  }
+
   // assume localhost
   return `http://localhost:${process.env.PORT ?? 3000}`;
 }
+
 export const trpc = createTRPCNext<AppRouter>({
   config() {
+    const url = getBaseUrl() + "/api/trpc";
     return {
       links: [
-        httpBatchLink({
-          /**
-           * If you want to use SSR, you need to use the server's full URL
-           * @see https://trpc.io/docs/v11/ssr
-           **/
-          url: `${getBaseUrl()}/api/trpc`,
-          // You can pass any HTTP headers you wish here
-          async headers() {
-            return {
-              // authorization: getAuthCookie(),
-            };
-          },
+        splitLink({
+          condition: (op) => op.type === "subscription",
+          true: httpSubscriptionLink({
+            url,
+            transformer,
+          }),
+          false: httpBatchLink({
+            url,
+            transformer,
+          }),
         }),
       ],
     };
   },
-  /**
-   * @see https://trpc.io/docs/v11/ssr
-   **/
-  ssr: false,
+  ssr: true,
+  ssrPrepass,
+  transformer,
 });
