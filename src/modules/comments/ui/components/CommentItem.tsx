@@ -14,6 +14,8 @@ import { CommentGetAllOutput } from "@/trpc/routers/types";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { formatDistanceToNow } from "date-fns";
 import {
+  ChevronDownIcon,
+  ChevronUpIcon,
   MessageSquareIcon,
   MoreVerticalIcon,
   ThumbsDownIcon,
@@ -21,16 +23,24 @@ import {
   Trash2Icon,
 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { toast } from "sonner";
+import { CommentForm } from "./CommentForm";
+import CommentReply from "./CommentReply";
 
 const CommentItem = ({
   comment,
+  variant = "comment",
 }: {
   comment: CommentGetAllOutput["items"][number];
+  variant?: "comment" | "reply";
 }) => {
   const utils = trpc.useUtils();
   const clerk = useClerk();
   const { userId } = useAuth();
+
+  const [isReplyOpen, setIsReplyOpen] = useState(false);
+  const [isRepliesOpen, setIsRepliesOpen] = useState(false);
 
   const removeComment = trpc.comments.remove.useMutation({
     onSuccess: () => {
@@ -59,7 +69,7 @@ const CommentItem = ({
       <div className="flex gap-4">
         <Link href={`/profile/${comment.userId}`}>
           <UserAvatar
-            size={"lg"}
+            size={variant === "reply" ? "sm" : "lg"}
             imageUrl={comment.user.image_url}
             name={comment.user.name}
           />
@@ -115,6 +125,16 @@ const CommentItem = ({
                 {comment.dislikeCount}
               </span>
             </div>
+            {variant === "comment" ? (
+              <Button
+                size={"sm"}
+                variant={"ghost"}
+                className="size-8 px-1"
+                onClick={() => setIsReplyOpen(true)}
+              >
+                Reply
+              </Button>
+            ) : null}
           </div>
         </div>
         <DropdownMenu modal={false}>
@@ -124,10 +144,12 @@ const CommentItem = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-              <MessageSquareIcon className="size-4" />
-              Reply
-            </DropdownMenuItem>
+            {variant === "comment" ? (
+              <DropdownMenuItem onClick={() => setIsReplyOpen(true)}>
+                <MessageSquareIcon className="size-4" />
+                Reply
+              </DropdownMenuItem>
+            ) : null}
             {comment.user.clerkId === userId ? (
               <DropdownMenuItem
                 onClick={() => removeComment.mutate({ id: comment.id })}
@@ -139,6 +161,35 @@ const CommentItem = ({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      {isReplyOpen && variant === "comment" ? (
+        <div className="mt-4 pl-14">
+          <CommentForm
+            variant="reply"
+            parentId={comment.id}
+            videoId={comment.videoId}
+            onCancel={() => setIsReplyOpen(false)}
+            onSuccess={() => {
+              setIsReplyOpen(false);
+              setIsRepliesOpen(true);
+            }}
+          />
+        </div>
+      ) : null}
+      {comment.replyCount > 0 && variant === "comment" && isRepliesOpen ? (
+        <CommentReply videoId={comment.videoId} parentId={comment.id} />
+      ) : null}
+      {comment.replyCount > 0 && variant === "comment" ? (
+        <div className="pl-14">
+          <Button
+            size={"sm"}
+            variant={"tertiary"}
+            onClick={() => setIsRepliesOpen((v) => !v)}
+          >
+            {isRepliesOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            {comment.replyCount} replies
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 };

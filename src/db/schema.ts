@@ -8,6 +8,7 @@ import {
   integer,
   pgEnum,
   primaryKey,
+  foreignKey,
 } from "drizzle-orm/pg-core";
 import {
   createSelectSchema,
@@ -223,18 +224,29 @@ export const videoReactionSelectSchema = createSelectSchema(videoReactions);
 export const videoReactionInsertSchema = createInsertSchema(videoReactions);
 export const videoReactionUpdateSchema = createUpdateSchema(videoReactions);
 
-export const comments = pgTable("comments", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  value: text("value").notNull(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  videoId: uuid("video_id")
-    .notNull()
-    .references(() => videos.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export const comments = pgTable(
+  "comments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    value: text("value").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    videoId: uuid("video_id")
+      .notNull()
+      .references(() => videos.id, { onDelete: "cascade" }),
+    parentId: uuid("parent_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.parentId],
+      foreignColumns: [table.id],
+      name: "comments_parent_id_fkey",
+    }).onDelete("cascade"),
+  ],
+);
 
 export const commentRelations = relations(comments, ({ one, many }) => ({
   user: one(users, {
@@ -245,7 +257,15 @@ export const commentRelations = relations(comments, ({ one, many }) => ({
     fields: [comments.videoId],
     references: [videos.id],
   }),
+  parent: one(comments, {
+    fields: [comments.parentId],
+    references: [comments.id],
+    relationName: "comments_parent_id_fkey",
+  }),
   reactions: many(commentReactions),
+  replies: many(comments, {
+    relationName: "comments_parent_id_fkey",
+  }),
 }));
 
 export const commentSelectSchema = createSelectSchema(comments);
