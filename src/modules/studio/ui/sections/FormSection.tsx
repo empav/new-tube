@@ -168,7 +168,7 @@ const FormSectionSuspense = ({ videoId }: { videoId: string }) => {
               >
                 Save
               </Button>
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
                     <MoreVerticalIcon />
@@ -277,7 +277,7 @@ const FormSectionSuspense = ({ videoId }: { videoId: string }) => {
                           fill
                           className="object-cover"
                         />
-                        <DropdownMenu>
+                        <DropdownMenu modal={false}>
                           <DropdownMenuTrigger asChild>
                             <Button
                               type="button"
