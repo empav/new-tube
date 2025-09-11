@@ -78,6 +78,13 @@
       "when": 1757494313267,
       "tag": "0010_clean_warbound",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1757575400797,
+      "tag": "0011_clever_speed_demon",
+      "breakpoints": true
     }
   ]
 }

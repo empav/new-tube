@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Avatar placeholder">
+  <title>Avatar placeholder</title>
+  <!-- sfondo cerchio grigio -->
+  <circle cx="64" cy="64" r="64" fill="#e5e7eb"/>
+
+  <!-- cerchio interno leggermente più scuro -->
+  <circle cx="64" cy="48" r="28" fill="#d1d5db" />
+
+  <!-- corpo ometto -->
+  <g transform="translate(64,72)">
+    <!-- spalle / torso -->
+    <path d="M -28 2 C -28 -8 -18 -18 0 -18 C 18 -18 28 -8 28 2 L 28 22 C 28 30 20 36 0 36 C -20 36 -28 30 -28 22 Z" fill="#9ca3af"/>
+    <!-- testa -->
+    <circle cx="0" cy="-28" r="12" fill="#9ca3af"/>
+  </g>
+</svg>
