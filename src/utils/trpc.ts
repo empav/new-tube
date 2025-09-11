@@ -11,7 +11,7 @@ import superjson from "superjson";
 
 export const transformer = superjson;
 
-export const TRPC_URL = `https://${process.env.NEXT_PUBLIC_APP_URL}/api/trpc`;
+export const TRPC_URL = `${process.env.NEXT_PUBLIC_APP_URL}/api/trpc`;
 
 export const trpc = createTRPCNext<AppRouter>({
   config() {
