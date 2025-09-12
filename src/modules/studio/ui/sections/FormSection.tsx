@@ -136,7 +136,7 @@ const FormSectionSuspense = ({ videoId }: { videoId: string }) => {
     router.push("/studio");
   };
 
-  const fullURL = `https://${process.env.NEXT_PUBLIC_APP_URL}/videos/${videoId}`;
+  const fullURL = `${process.env.NEXT_PUBLIC_APP_URL}/videos/${videoId}`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(fullURL);
