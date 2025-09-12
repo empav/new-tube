@@ -6,3 +6,5 @@ type RouterOutputs = inferRouterOutputs<AppRouter>;
 export type VideoGetByIdOutput = RouterOutputs["videos"]["getById"];
 
 export type CommentGetAllOutput = RouterOutputs["comments"]["getAll"];
+
+export type SuggestionGetAllOutput = RouterOutputs["suggestions"]["getAll"];

@@ -13,6 +13,10 @@ const Page = async ({ params }: Props) => {
 
   void trpc.videos.getById.prefetch({ id: videoId });
   void trpc.comments.getAll.prefetchInfinite({ videoId, limit: DEFAULT_LIMIT });
+  void trpc.suggestions.getAll.prefetchInfinite({
+    videoId,
+    limit: DEFAULT_LIMIT,
+  });
 
   return (
     <HydrateClient>

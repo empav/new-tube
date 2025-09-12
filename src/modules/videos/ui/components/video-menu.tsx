@@ -14,7 +14,7 @@ type Props = {
   onRemove?: () => void;
 };
 
-const VideoMenu = ({ videoId, variant, onRemove }: Props) => {
+const VideoMenu = ({ videoId, variant = "ghost", onRemove }: Props) => {
   const onShare = () => {
     navigator.clipboard.writeText(
       `https://${process.env.NEXT_PUBLIC_APP_URL}/videos/${videoId}`,
