@@ -45,6 +45,85 @@ const CREATE_UPLOAD_CONFIG: AssetOptions = {
 };
 
 export const videosRouter = createTRPCRouter({
+  getAllSubs: protectedProcedure
+    .input(
+      z.object({
+        cursor: z
+          .object({
+            id: z.string().uuid(),
+            updatedAt: z.date(),
+          })
+          .nullish(),
+        limit: z.number().min(1).max(100),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const viewerSubs = db.$with("viewerSubs").as(
+        db
+          .select({
+            creatorId: subscriptions.creatorId,
+          })
+          .from(subscriptions)
+          .where(eq(subscriptions.viewerId, ctx.user.id)),
+      );
+
+      const data = await db
+        .with(viewerSubs)
+        .select({
+          ...getTableColumns(videos),
+          user: users,
+          viewCount: db.$count(videoViews, eq(videoViews.videoId, videos.id)),
+          likeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "like"),
+            ),
+          ),
+          dislikeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "dislike"),
+            ),
+          ),
+        })
+        .from(videos)
+        .innerJoin(users, eq(videos.userId, users.id))
+        .innerJoin(viewerSubs, eq(videos.userId, viewerSubs.creatorId))
+        .where(
+          and(
+            eq(videos.visibility, "public"),
+            input.cursor
+              ? or(
+                  lt(videos.updatedAt, input.cursor.updatedAt),
+                  and(
+                    eq(videos.updatedAt, input.cursor.updatedAt),
+                    lt(videos.id, input.cursor.id),
+                  ),
+                )
+              : undefined,
+          ),
+        )
+        .orderBy(desc(videos.updatedAt), desc(videos.id))
+        // We fetch one more item than the limit to determine if there's a next page
+        .limit(input.limit + 1);
+
+      const hasMore = data.length > input.limit;
+      const items = hasMore ? data.slice(0, -1) : data;
+      const lastItem = items[items.length - 1];
+      const nextCursor = hasMore
+        ? {
+            id: lastItem.id,
+            updatedAt: lastItem.updatedAt,
+          }
+        : undefined;
+
+      return {
+        items,
+        nextCursor,
+      };
+    }),
   getAllTrending: publicProcedure
     .input(
       z.object({
@@ -221,6 +300,8 @@ export const videosRouter = createTRPCRouter({
           .from(subscriptions)
           .where(inArray(subscriptions.viewerId, userId ? [userId] : [])),
       );
+
+      console.log({ viewerSubscriptions });
 
       const [video] = await db
         .with(reactions, viewerSubscriptions)
