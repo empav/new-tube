@@ -1,3 +1,4 @@
+import { DEFAULT_LIMIT } from "@/constants";
 import { HomeView } from "@/modules/home/ui/views/home-view";
 import { HydrateClient, trpc } from "@/trpc/server";
 
@@ -11,7 +12,12 @@ type Props = {
 
 const Page = async ({ searchParams }: Props) => {
   const { categoryId } = await searchParams;
+
   void trpc.categories.getAll.prefetch();
+  void trpc.videos.getAll.prefetchInfinite({
+    categoryId,
+    limit: DEFAULT_LIMIT,
+  });
 
   return (
     <HydrateClient>

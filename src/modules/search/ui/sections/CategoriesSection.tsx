@@ -36,7 +36,7 @@ const CategoriesSectionSuspense = ({ categoryId }: CategoriesSectionProps) => {
 
 const CategoriesSection = ({ categoryId }: CategoriesSectionProps) => {
   return (
-    <Suspense fallback={<CategoriesSkeleton />}>
+    <Suspense key={categoryId} fallback={<CategoriesSkeleton />}>
       <ErrorBoundary fallback={<div>Failed to load categories.</div>}>
         <CategoriesSectionSuspense categoryId={categoryId} />
       </ErrorBoundary>

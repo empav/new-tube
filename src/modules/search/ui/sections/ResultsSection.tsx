@@ -65,7 +65,7 @@ const ResultsSection = ({
   categoryId: string | undefined;
 }) => {
   return (
-    <Suspense fallback={<ResultsSkeleton />}>
+    <Suspense key={`${query}-${categoryId}`} fallback={<ResultsSkeleton />}>
       <ErrorBoundary fallback={<div>Failed to load videos.</div>}>
         <ResultsSectionSuspense categoryId={categoryId} query={query} />
       </ErrorBoundary>

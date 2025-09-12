@@ -14,7 +14,16 @@ import {
   publicProcedure,
 } from "@/trpc/init";
 import { mux } from "@/utils/mux";
-import { and, eq, getTableColumns, inArray, isNotNull } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  isNotNull,
+  lt,
+  or,
+} from "drizzle-orm";
 import { AssetOptions } from "@mux/mux-node/resources/video/assets.mjs";
 import { TRPCError } from "@trpc/server";
 import { UploadThingApi } from "@/app/api/uploadthing/core";
@@ -36,6 +45,151 @@ const CREATE_UPLOAD_CONFIG: AssetOptions = {
 };
 
 export const videosRouter = createTRPCRouter({
+  getAllTrending: publicProcedure
+    .input(
+      z.object({
+        cursor: z
+          .object({
+            id: z.string().uuid(),
+            viewCount: z.number(),
+          })
+          .nullish(),
+        limit: z.number().min(1).max(100),
+      }),
+    )
+    .query(async ({ input }) => {
+      const viewCountSubquery = db.$count(
+        videoViews,
+        eq(videoViews.videoId, videos.id),
+      );
+
+      const data = await db
+        .select({
+          ...getTableColumns(videos),
+          user: users,
+          viewCount: viewCountSubquery,
+          likeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "like"),
+            ),
+          ),
+          dislikeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "dislike"),
+            ),
+          ),
+        })
+        .from(videos)
+        .innerJoin(users, eq(videos.userId, users.id))
+        .where(
+          and(
+            eq(videos.visibility, "public"),
+            input.cursor
+              ? or(
+                  lt(viewCountSubquery, input.cursor.viewCount),
+                  and(
+                    eq(viewCountSubquery, input.cursor.viewCount),
+                    lt(videos.id, input.cursor.id),
+                  ),
+                )
+              : undefined,
+          ),
+        )
+        .orderBy(desc(viewCountSubquery), desc(videos.id))
+        // We fetch one more item than the limit to determine if there's a next page
+        .limit(input.limit + 1);
+
+      const hasMore = data.length > input.limit;
+      const items = hasMore ? data.slice(0, -1) : data;
+      const lastItem = items[items.length - 1];
+      const nextCursor = hasMore
+        ? {
+            id: lastItem.id,
+            viewCount: lastItem.viewCount,
+          }
+        : undefined;
+
+      return {
+        items,
+        nextCursor,
+      };
+    }),
+  getAll: publicProcedure
+    .input(
+      z.object({
+        categoryId: z.uuid().nullish(),
+        cursor: z
+          .object({
+            id: z.string().uuid(),
+            updatedAt: z.date(),
+          })
+          .nullish(),
+        limit: z.number().min(1).max(100),
+      }),
+    )
+    .query(async ({ input }) => {
+      const data = await db
+        .select({
+          ...getTableColumns(videos),
+          user: users,
+          viewCount: db.$count(videoViews, eq(videoViews.videoId, videos.id)),
+          likeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "like"),
+            ),
+          ),
+          dislikeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "dislike"),
+            ),
+          ),
+        })
+        .from(videos)
+        .innerJoin(users, eq(videos.userId, users.id))
+        .where(
+          and(
+            eq(videos.visibility, "public"),
+            input.categoryId
+              ? eq(videos.categoryId, input.categoryId)
+              : undefined,
+            input.cursor
+              ? or(
+                  lt(videos.updatedAt, input.cursor.updatedAt),
+                  and(
+                    eq(videos.updatedAt, input.cursor.updatedAt),
+                    lt(videos.id, input.cursor.id),
+                  ),
+                )
+              : undefined,
+          ),
+        )
+        .orderBy(desc(videos.updatedAt), desc(videos.id))
+        // We fetch one more item than the limit to determine if there's a next page
+        .limit(input.limit + 1);
+
+      const hasMore = data.length > input.limit;
+      const items = hasMore ? data.slice(0, -1) : data;
+      const lastItem = items[items.length - 1];
+      const nextCursor = hasMore
+        ? {
+            id: lastItem.id,
+            updatedAt: lastItem.updatedAt,
+          }
+        : undefined;
+
+      return {
+        items,
+        nextCursor,
+      };
+    }),
   getById: publicProcedure
     .input(z.object({ id: z.uuid() }))
     .query(async ({ ctx, input }) => {
