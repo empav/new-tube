@@ -169,9 +169,9 @@ const VideoSectionSuspense = () => {
                     <TableCell className="truncate text-sm">
                       {format(new Date(video.createdAt), DEFAULT_DATE_FORMAT)}
                     </TableCell>
-                    <TableCell className="text-right">0</TableCell>
-                    <TableCell className="text-right">0</TableCell>
-                    <TableCell className="pr-6 text-right">0</TableCell>
+                    <TableCell>{video.views}</TableCell>
+                    <TableCell>{video.comments}</TableCell>
+                    <TableCell>{video.likes}</TableCell>
                   </TableRow>
                 </Link>
               )),
