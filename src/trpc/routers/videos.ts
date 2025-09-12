@@ -294,7 +294,7 @@ export const videosRouter = createTRPCRouter({
           .from(videoReactions)
           .where(inArray(videoReactions.userId, userId ? [userId] : [])),
       );
-      const viewerSubscriptions = db.$with("subscriptions").as(
+      const viewerSubscriptions = db.$with("viewerSubscriptions").as(
         db
           .select()
           .from(subscriptions)

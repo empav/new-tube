@@ -36,7 +36,7 @@ const useSubscriptions = ({
 
   const remove = trpc.subscriptions.remove.useMutation({
     onSuccess: () => {
-      toast.success("Subscribed successfully!");
+      toast.success("Unsubscribed successfully!");
 
       utils.videos.getAllSubs.invalidate();
 
@@ -45,7 +45,7 @@ const useSubscriptions = ({
       }
     },
     onError: (error) => {
-      toast.error("Failed to subscribe: " + error.message);
+      toast.error("Failed to unsubscribe: " + error.message);
       if (error.data?.code === "UNAUTHORIZED") {
         clerk.openSignIn();
       }
